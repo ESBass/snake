@@ -26,6 +26,7 @@ struct {
 struct {
     int x, y;
     int direction;
+    int length;
 } typedef snake;
 
 gamestate state;
@@ -35,6 +36,24 @@ void DrawBackground(void);
 void MoveSnake(snake* s);
 void HandleSnakeInput(snake* s, SDL_Event* event);
 
+void MoveTail(snake s, Vector2 tail[]){
+    Vector2 prev = {0};
+    Vector2 current = (Vector2){s.x, s.y};
+    Vector2 head = current;
+
+    for(int i = 0; i < 220; i++){
+        prev = tail[i];
+        if(prev.x == head.x && prev.y == head.y && i < s.length){
+            printf("%s\n", "Game Over");
+        }
+
+        tail[i] = current;
+        current = prev;
+    }
+}
+
+void RenderSnake(snake s, Vector2 tail[]);
+
 int main(int argc, char** argv){
 
     //Used to check the window state.
@@ -42,8 +61,9 @@ int main(int argc, char** argv){
 
     snake player;
 
-    Vector2 snakeTail[220] = {-1};
-    int snakeLength = 5;
+    player.length = 5;
+
+    Vector2 snakeTail [220] = {-1}; 
 
     //Init sdl.
     if(!SDL_Init(SDL_INIT_VIDEO)){
@@ -51,10 +71,10 @@ int main(int argc, char** argv){
     }
 
     //Create renderer and window.
-    SDL_Window* window = SDL_CreateWindow("WINDOW", WIDTH, HEIGHT, 0);
-    state.renderer = SDL_CreateRenderer(window, NULL);
+    state.window = SDL_CreateWindow("WINDOW", WIDTH, HEIGHT, 0);
+    state.renderer = SDL_CreateRenderer(state.window, NULL);
 
-    if(!window) return -1;
+    if(!state.window) return -1;
 
     player.x = 0;
     player.y = 0;
@@ -77,35 +97,19 @@ int main(int argc, char** argv){
 
         if(SDL_GetTicks() - lastupdate > 500){
             MoveSnake(&player);
-
-            Vector2 prev = {0};
-            Vector2 current = (Vector2){player.x, player.y};
-
-            for(int i = 0; i < (sizeof(snakeTail) / sizeof(Vector2)); i++){
-                prev = snakeTail[i];
-                snakeTail[i] = current;
-                current = prev;
-            }
-
+            MoveTail(player, snakeTail);
             lastupdate = SDL_GetTicks();
         }
 
         DrawBackground();
 
-        SDL_SetRenderDrawColor(state.renderer, 233, 0, 0, 255);
-        Vector2 snakePos = WorldSpaceToScreenSpace((Vector2){player.x, player.y});
-        SDL_RenderFillRect(state.renderer, &(SDL_FRect){snakePos.x, snakePos.y, 45, 45});
-
-        for(int seg = 0; seg < snakeLength; seg++){
-            Vector2 segCoords = WorldSpaceToScreenSpace(snakeTail[seg]);
-            SDL_RenderFillRect(state.renderer, &(SDL_FRect){segCoords.x, segCoords.y, 45, 45});
-        }
+        RenderSnake(player, snakeTail);
 
         SDL_RenderPresent(state.renderer);
     }
 
     SDL_DestroyRenderer(state.renderer);
-    SDL_DestroyWindow(window);
+    SDL_DestroyWindow(state.window);
     return 0;
 }
 
@@ -156,26 +160,45 @@ void HandleSnakeInput(snake *s, SDL_Event* event)
     switch (event->key.key)
     {
     case SDLK_UP:
+        if(s->direction == DIR_DOWN) break;
         s->direction = DIR_UP;
         printf("%s", "UP KEY");
         break;
     case SDLK_DOWN:
+        if(s->direction == DIR_UP) break;
         s->direction = DIR_DOWN;
         printf("%s", "DOWN KEY");
         break;
 
     case SDLK_LEFT:
+        if(s->direction == DIR_RIGHT) break;
         s->direction = DIR_LEFT;
         printf("%s", "KEY LEFT");
         break;
 
     case SDLK_RIGHT:
+        if(s->direction == DIR_LEFT) break;
         s->direction = DIR_RIGHT;
         printf("%s", "RIGHT KEY");
         break;
     
     default:
         break;
+    }
+}
+
+void RenderSnake(snake s, Vector2 tail[])
+{
+    // Draw head
+    SDL_SetRenderDrawColor(state.renderer, 233, 0, 0, 255);
+    Vector2 snakePos = WorldSpaceToScreenSpace((Vector2){s.x, s.y});
+    SDL_RenderFillRect(state.renderer, &(SDL_FRect){snakePos.x, snakePos.y, 45, 45});
+
+    //Render tail
+
+    for(int seg = 0; seg < s.length; seg++){
+        Vector2 segCoords = WorldSpaceToScreenSpace(tail[seg]);
+        SDL_RenderFillRect(state.renderer, &(SDL_FRect){segCoords.x, segCoords.y, 45, 45});
     }
 }
 
