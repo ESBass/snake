@@ -2,12 +2,11 @@ cmake_minimum_required(VERSION 3.15)
 
 project(Snake)
 
-add_executable(${PROJECT_NAME} src/main.c)
 
-add_subdirectory(lib/sdl)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-target_include_directories(${PROJECT_NAME} PUBLIC lib/sdl/include)
+set(BUILD_SHARED_LIBS OFF)
 
-target_link_directories(${PROJECT_NAME} PRIVATE lib/sdl/src)
+add_subdirectory(lib)
 
-target_link_libraries(${PROJECT_NAME} sdl3)
+add_subdirectory(src)
