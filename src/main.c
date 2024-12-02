@@ -1,41 +1,57 @@
 #include <stdio.h>
 #include <SDL3/SDL.h>
 
+//Define window width and height
 #define HEIGHT 720
 #define WIDTH 1280
 
+//Define the offsets of the game area/
 #define GAME_X0 140
 #define GAME_Y0 84
 
+//Define directions of the snake.
 #define DIR_RIGHT 0
 #define DIR_LEFT 1
 #define DIR_UP 2
 #define DIR_DOWN 3
 
+//Define the difference between two squares.
 #define STEP_SIZE 50
 
+//Gamestate struct so the window and renderer can be quickly referenced.
 struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
 } typedef gamestate;
 
+//Basic vector 2 struct.
 struct {
     int x, y;
 } typedef Vector2;
 
+//Define a snake
 struct {
-    int x, y;
-    int direction;
-    int length;
+    int x, y; //Snake current position.
+    int direction; //Direction the snake is heading in.
+    int length; //The number of segments the snake has.
 } typedef snake;
 
+//Define a global "state" variable.
 gamestate state;
 
-Vector2 WorldSpaceToScreenSpace(Vector2 coords);
+// Convert world space to screen space coords.
+static inline Vector2 WorldSpaceToScreenSpace(Vector2 coords);
+
+//Draw the background and grid.
 void DrawBackground(void);
+
+//Move the snake.
 void MoveSnake(snake* s);
+
+//Change snake direction.
 void HandleSnakeInput(snake* s, SDL_Event* event);
 
+//Basically a queue management function.
 void MoveTail(snake s, Vector2 tail[]){
     Vector2 prev = {0};
     Vector2 current = (Vector2){s.x, s.y};
@@ -43,6 +59,9 @@ void MoveTail(snake s, Vector2 tail[]){
 
     for(int i = 0; i < 220; i++){
         prev = tail[i];
+
+        //This checks if the snake has collided with itself.
+        //The s.length check is because the tail length array can hold every square in memory.
         if(prev.x == head.x && prev.y == head.y && i < s.length){
             printf("%s\n", "Game Over");
         }
@@ -52,6 +71,7 @@ void MoveTail(snake s, Vector2 tail[]){
     }
 }
 
+//Snake rendering function.
 void RenderSnake(snake s, Vector2 tail[]);
 
 int main(int argc, char** argv){
@@ -59,10 +79,12 @@ int main(int argc, char** argv){
     //Used to check the window state.
     int shouldClose = 0;
 
+    //Create player snake.
     snake player;
 
     player.length = 5;
 
+    //Array for all the snake tail segment positions, initialised to -1.
     Vector2 snakeTail [220] = {-1}; 
 
     //Init sdl.
@@ -74,13 +96,17 @@ int main(int argc, char** argv){
     state.window = SDL_CreateWindow("WINDOW", WIDTH, HEIGHT, 0);
     state.renderer = SDL_CreateRenderer(state.window, NULL);
 
+    //If one of wasn't created, return out.
     if(!state.window) return -1;
+    if(!state.renderer) return -1;
 
+    //Set player pos to 0,0
     player.x = 0;
     player.y = 0;
 
     player.direction = 0;
 
+    //Used for delta time.
     float lastupdate = 0;
 
     while (!shouldClose) {
@@ -95,6 +121,7 @@ int main(int argc, char** argv){
             }   
         }
 
+        //Every 500ms move the snake.
         if(SDL_GetTicks() - lastupdate > 500){
             MoveSnake(&player);
             MoveTail(player, snakeTail);
@@ -115,20 +142,27 @@ int main(int argc, char** argv){
 
 void DrawBackground(void)
 {
+    //Set the renderer to blue, and fill the screen.
     SDL_SetRenderDrawColor(state.renderer, 7, 0, 87, 255);
     SDL_RenderClear(state.renderer);
+
+    //Set the renderer to white, and draw a rectangle in the middle of the screen.
     SDL_SetRenderDrawColor(state.renderer, 255, 255, 255, 255);
     SDL_RenderFillRect(state.renderer, &(SDL_FRect){100, 56, 1080, 600});
+
+    //Change render colour back to blue.
     SDL_SetRenderDrawColor(state.renderer, 7, 0, 87, 255);
+
     //Play Area xy (140)(84) width/height(1000)(550)#
 
+    //Draw a grid of blue squares in the play area.
     int currentX = GAME_X0;
     int currentY = GAME_Y0;
     while(currentY < 600){
-    while(currentX < 1100){
-            SDL_RenderFillRect(state.renderer, &(SDL_FRect){currentX, currentY, 45, 45});
-            currentX+=50;
-        }
+        while(currentX < 1100){
+                SDL_RenderFillRect(state.renderer, &(SDL_FRect){currentX, currentY, 45, 45});
+                currentX+=50;
+            }
         currentY += 50;
         currentX = 140;
     }
@@ -157,6 +191,11 @@ void MoveSnake(snake *s)
 
 void HandleSnakeInput(snake *s, SDL_Event* event)
 {
+
+    //Each switch statements basically:
+    //Checks that the move is valid
+    //Does it.
+    //Outputs to console
     switch (event->key.key)
     {
     case SDLK_UP:
@@ -202,7 +241,7 @@ void RenderSnake(snake s, Vector2 tail[])
     }
 }
 
-Vector2 WorldSpaceToScreenSpace(Vector2 coords)
+static inline Vector2 WorldSpaceToScreenSpace(Vector2 coords)
 {
     int screenx = coords.x + GAME_X0;
     int screeny = coords.y + GAME_Y0;
