@@ -2,6 +2,7 @@
 #include <SDL3/SDL.h>
 #include <time.h>
 #include <stdlib.h>
+#include <string.h>
 
 //Define window width and height
 #define HEIGHT 720
@@ -27,6 +28,7 @@
 struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
+    int paused, nopause;
 } typedef gamestate;
 
 //Basic vector 2 struct.
@@ -89,6 +91,34 @@ void RenderSnake(snake s, Vector2 tail[]);
 
 int main(int argc, char** argv){
 
+    int snakeStartLength = 3;
+    int snakeInterval = 250;
+
+    state.nopause = 0;
+
+    for (int arg = 1; arg < argc; arg++)
+    {
+        char* param = argv[arg];
+
+        if(!strcmp(param, "-snakelength")){
+            snakeStartLength = atoi(argv[arg+1]);
+        }
+
+        if(!strcmp(param, "-snakespeed")){
+            char* speed  = argv[arg+1];
+            if(!strcmp(speed, "--veryslow")) snakeInterval = 1000;
+            else if(!strcmp(speed, "--slow")) snakeInterval = 500;
+            else if(!strcmp(speed, "--normal")) continue;
+            else if(!strcmp(speed, "--fast")) snakeInterval = 125;
+            else if(!strcmp(speed, "--veryfast")) snakeInterval = 62;
+            else if(!strcmp(speed, "--suicide")) snakeInterval = 5;
+            else snakeInterval = atoi(speed);
+        }
+
+        if(!strcmp(param, "-nopause")) state.nopause = 1;
+    }
+    
+
     //Used to check the window state.
     int shouldClose = 0;
 
@@ -98,7 +128,7 @@ int main(int argc, char** argv){
 
     srand(time(NULL));
 
-    player.length = 3;
+    player.length = snakeStartLength;
 
     //Array for all the snake tail segment positions, initialised to -1.
     Vector2 snakeTail [220] = {-1}; 
@@ -128,6 +158,8 @@ int main(int argc, char** argv){
 
     MoveApple(&apple, snakeTail, &player);
 
+    state.paused = 0;
+
     while (!shouldClose) {
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
@@ -141,7 +173,8 @@ int main(int argc, char** argv){
         }
 
         //Every 500ms move the snake.
-        if(SDL_GetTicks() - lastupdate > 250){
+        if(SDL_GetTicks() - lastupdate > snakeInterval){
+            if(state.paused) goto render;
             MoveSnake(&player);
             player.lastUpdateDir = player.direction;
             MoveTail(player, snakeTail);
@@ -156,6 +189,7 @@ int main(int argc, char** argv){
             lastupdate = SDL_GetTicks();
         }
 
+render:
         DrawBackground();
 
         RenderSnake(player, snakeTail);
@@ -233,26 +267,30 @@ void HandleSnakeInput(snake *s, SDL_Event* event)
     switch (event->key.key)
     {
     case SDLK_UP:
-        if(s->lastUpdateDir == DIR_DOWN) break;
+        if(s->lastUpdateDir == DIR_DOWN || state.paused) break;
         s->direction = DIR_UP;
         printf("%s", "UP KEY");
         break;
     case SDLK_DOWN:
-        if(s->lastUpdateDir == DIR_UP) break;
+        if(s->lastUpdateDir == DIR_UP || state.paused) break;
         s->direction = DIR_DOWN;
         printf("%s", "DOWN KEY");
         break;
 
     case SDLK_LEFT:
-        if(s->lastUpdateDir == DIR_RIGHT) break;
+        if(s->lastUpdateDir == DIR_RIGHT || state.paused) break;
         s->direction = DIR_LEFT;
         printf("%s", "KEY LEFT");
         break;
 
     case SDLK_RIGHT:
-        if(s->lastUpdateDir == DIR_LEFT) break;
+        if(s->lastUpdateDir == DIR_LEFT || state.paused) break;
         s->direction = DIR_RIGHT;
         printf("%s", "RIGHT KEY");
+        break;
+    
+    case SDLK_ESCAPE:
+        if(!state.nopause) state.paused = !state.paused;
         break;
     
     default:
