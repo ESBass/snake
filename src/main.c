@@ -266,9 +266,35 @@ void RenderSnake(snake s, Vector2 tail[])
 
     //Render tail
 
+    Vector2 segCoords;
+    Vector2 prevSegCoords = snakePos;
+
     for(int seg = 0; seg < s.length; seg++){
-        Vector2 segCoords = WorldSpaceToScreenSpace(tail[seg]);
-        SDL_RenderFillRect(state.renderer, &(SDL_FRect){segCoords.x, segCoords.y, 45, 45});
+
+        int segWidth = 45;
+        int segHeight = 45;
+        int segxOffset = 0;
+        int segyOffset = 0;
+
+        segCoords = WorldSpaceToScreenSpace(tail[seg]);
+
+        if(prevSegCoords.x > segCoords.x) segWidth = 50;
+        if(prevSegCoords.y > segCoords.y) segHeight = 50;
+
+        if(prevSegCoords.x < segCoords.x){
+            segWidth = 50;
+            segxOffset = -5;
+        }
+
+        if(prevSegCoords.y < segCoords.y){
+            segHeight = 50;
+            segyOffset = -5;
+        }
+
+        SDL_RenderFillRect(state.renderer, &(SDL_FRect){segCoords.x + segxOffset, segCoords.y + segyOffset, segWidth, segHeight});
+
+        prevSegCoords = segCoords;
+        
     }
 }
 
