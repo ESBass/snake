@@ -53,7 +53,7 @@ void DrawBackground(void);
 //Move the snake.
 void MoveSnake(snake* s);
 
-void MoveApple(Vector2* applepos);
+void MoveApple(Vector2* applepos, Vector2 tail[], snake* s);
 
 //Change snake direction.
 void HandleSnakeInput(snake* s, SDL_Event* event);
@@ -124,7 +124,7 @@ int main(int argc, char** argv){
     //Used for delta time.
     float lastupdate = 0;
 
-    MoveApple(&apple);
+    MoveApple(&apple, snakeTail, &player);
 
     while (!shouldClose) {
         SDL_Event ev;
@@ -139,7 +139,7 @@ int main(int argc, char** argv){
         }
 
         //Every 500ms move the snake.
-        if(SDL_GetTicks() - lastupdate > 500){
+        if(SDL_GetTicks() - lastupdate > 250){
             MoveSnake(&player);
             MoveTail(player, snakeTail);
 
@@ -147,7 +147,7 @@ int main(int argc, char** argv){
 
             if(playerapplepos.x == apple.x && playerapplepos.y == apple.y){
                 player.length++;
-                MoveApple(&apple);
+                MoveApple(&apple, snakeTail, &player);
             }
 
             lastupdate = SDL_GetTicks();
@@ -215,6 +215,9 @@ void MoveSnake(snake *s)
     default:
         break;
     }
+
+    if(s->x > 951 || s->x < 0) GameOver();
+    else if(s->y > 500 || s->y < 0) GameOver();
 }
 
 void HandleSnakeInput(snake *s, SDL_Event* event)
@@ -269,16 +272,23 @@ void RenderSnake(snake s, Vector2 tail[])
     }
 }
 
-void MoveApple(Vector2* applepos){
+void MoveApple(Vector2* applepos, Vector2 tail[], snake* s){
     int applex = rand() % COLUMN_MAX;
     int appley = rand() % ROW_MAX;
 
     applepos->x = (GAME_X0 + (applex * STEP_SIZE));
     applepos->y = (GAME_Y0 + (appley * STEP_SIZE));
 
-    //if(applepos->x == GAME_X0 && applepos->y == GAME_Y0){
-      //  MoveApple(applepos);
-    //}
+    if((applepos->x == GAME_X0 && applepos->y == GAME_Y0)){
+        MoveApple(applepos, tail, s);
+    }
+
+    for(int i = 0; i < s->length; i++){
+        Vector2 segWorldPos = WorldSpaceToScreenSpace(tail[i]);
+        if(segWorldPos.x == applepos->x && segWorldPos.y == applepos->y){
+            MoveApple(applepos, tail, s);
+        }
+    }
 
     return;
 }
