@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <SDL3/SDL.h>
+#include <time.h>
+#include <stdlib.h>
 
 //Define window width and height
 #define HEIGHT 720
@@ -17,6 +19,9 @@
 
 //Define the difference between two squares.
 #define STEP_SIZE 50
+
+#define ROW_MAX 11
+#define COLUMN_MAX 20
 
 //Gamestate struct so the window and renderer can be quickly referenced.
 struct {
@@ -48,8 +53,15 @@ void DrawBackground(void);
 //Move the snake.
 void MoveSnake(snake* s);
 
+void MoveApple(Vector2* applepos);
+
 //Change snake direction.
 void HandleSnakeInput(snake* s, SDL_Event* event);
+
+void GameOver(){
+    printf("\n%s\n", "Game Over!");
+    exit(0);
+}
 
 //Basically a queue management function.
 void MoveTail(snake s, Vector2 tail[]){
@@ -63,7 +75,7 @@ void MoveTail(snake s, Vector2 tail[]){
         //This checks if the snake has collided with itself.
         //The s.length check is because the tail length array can hold every square in memory.
         if(prev.x == head.x && prev.y == head.y && i < s.length){
-            printf("%s\n", "Game Over");
+            GameOver();
         }
 
         tail[i] = current;
@@ -81,8 +93,11 @@ int main(int argc, char** argv){
 
     //Create player snake.
     snake player;
+    Vector2 apple = {0};
 
-    player.length = 5;
+    srand(time(NULL));
+
+    player.length = 3;
 
     //Array for all the snake tail segment positions, initialised to -1.
     Vector2 snakeTail [220] = {-1}; 
@@ -109,6 +124,8 @@ int main(int argc, char** argv){
     //Used for delta time.
     float lastupdate = 0;
 
+    MoveApple(&apple);
+
     while (!shouldClose) {
         SDL_Event ev;
         while (SDL_PollEvent(&ev)) {
@@ -125,12 +142,23 @@ int main(int argc, char** argv){
         if(SDL_GetTicks() - lastupdate > 500){
             MoveSnake(&player);
             MoveTail(player, snakeTail);
+
+            Vector2 playerapplepos = WorldSpaceToScreenSpace((Vector2){player.x, player.y});
+
+            if(playerapplepos.x == apple.x && playerapplepos.y == apple.y){
+                player.length++;
+                MoveApple(&apple);
+            }
+
             lastupdate = SDL_GetTicks();
         }
 
         DrawBackground();
 
         RenderSnake(player, snakeTail);
+
+        SDL_SetRenderDrawColor(state.renderer, 0, 255, 0, 255);
+        SDL_RenderFillRect(state.renderer, &(SDL_FRect){apple.x, apple.y, 45, 45});
 
         SDL_RenderPresent(state.renderer);
     }
@@ -239,6 +267,20 @@ void RenderSnake(snake s, Vector2 tail[])
         Vector2 segCoords = WorldSpaceToScreenSpace(tail[seg]);
         SDL_RenderFillRect(state.renderer, &(SDL_FRect){segCoords.x, segCoords.y, 45, 45});
     }
+}
+
+void MoveApple(Vector2* applepos){
+    int applex = rand() % COLUMN_MAX;
+    int appley = rand() % ROW_MAX;
+
+    applepos->x = (GAME_X0 + (applex * STEP_SIZE));
+    applepos->y = (GAME_Y0 + (appley * STEP_SIZE));
+
+    //if(applepos->x == GAME_X0 && applepos->y == GAME_Y0){
+      //  MoveApple(applepos);
+    //}
+
+    return;
 }
 
 static inline Vector2 WorldSpaceToScreenSpace(Vector2 coords)
