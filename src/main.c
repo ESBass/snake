@@ -39,6 +39,7 @@ struct {
     int x, y; //Snake current position.
     int direction; //Direction the snake is heading in.
     int length; //The number of segments the snake has.
+    int lastUpdateDir;
 } typedef snake;
 
 //Define a global "state" variable.
@@ -120,6 +121,7 @@ int main(int argc, char** argv){
     player.y = 0;
 
     player.direction = 0;
+    player.lastUpdateDir = player.direction;
 
     //Used for delta time.
     float lastupdate = 0;
@@ -141,6 +143,7 @@ int main(int argc, char** argv){
         //Every 500ms move the snake.
         if(SDL_GetTicks() - lastupdate > 250){
             MoveSnake(&player);
+            player.lastUpdateDir = player.direction;
             MoveTail(player, snakeTail);
 
             Vector2 playerapplepos = WorldSpaceToScreenSpace((Vector2){player.x, player.y});
@@ -230,24 +233,24 @@ void HandleSnakeInput(snake *s, SDL_Event* event)
     switch (event->key.key)
     {
     case SDLK_UP:
-        if(s->direction == DIR_DOWN) break;
+        if(s->lastUpdateDir == DIR_DOWN) break;
         s->direction = DIR_UP;
         printf("%s", "UP KEY");
         break;
     case SDLK_DOWN:
-        if(s->direction == DIR_UP) break;
+        if(s->lastUpdateDir == DIR_UP) break;
         s->direction = DIR_DOWN;
         printf("%s", "DOWN KEY");
         break;
 
     case SDLK_LEFT:
-        if(s->direction == DIR_RIGHT) break;
+        if(s->lastUpdateDir == DIR_RIGHT) break;
         s->direction = DIR_LEFT;
         printf("%s", "KEY LEFT");
         break;
 
     case SDLK_RIGHT:
-        if(s->direction == DIR_LEFT) break;
+        if(s->lastUpdateDir == DIR_LEFT) break;
         s->direction = DIR_RIGHT;
         printf("%s", "RIGHT KEY");
         break;
