@@ -207,7 +207,7 @@ int main(int argc, char** argv){
     }    
 
     SDL_Texture* text_texture;
-    SDL_FRect dest = {565, 10, scoreboard->w, scoreboard->h};
+    SDL_FRect dest = {((WIDTH/2) - (scoreboard->w / 2)), 10, scoreboard->w, scoreboard->h};
     state.paused = 0;
 
     while (!shouldClose) {
@@ -245,6 +245,8 @@ int main(int argc, char** argv){
                 strcat(outbuff, string);
 
                 scoreboard = TTF_RenderText_Solid(font, outbuff, 0, white);
+                text_texture = SDL_CreateTextureFromSurface(state.renderer, scoreboard);
+                dest = (SDL_FRect){((WIDTH/2) - (scoreboard->w / 2)), 10, scoreboard->w, scoreboard->h};
             }
 
             lastupdate = SDL_GetTicks();
@@ -258,7 +260,6 @@ render:
         SDL_SetRenderDrawColor(state.renderer, 0, 255, 0, 255);
         SDL_RenderFillRect(state.renderer, &(SDL_FRect){apple.x, apple.y, 45, 45});
 
-        text_texture = SDL_CreateTextureFromSurface(state.renderer, scoreboard);
 
         SDL_RenderTexture(state.renderer, text_texture, &(SDL_FRect){0, 0, scoreboard->w, scoreboard->h}, &dest);
         SDL_RenderPresent(state.renderer);
@@ -339,24 +340,20 @@ void HandleSnakeInput(snake *s, SDL_Event* event)
     case SDLK_UP:
         if(s->lastUpdateDir == DIR_DOWN || state.paused) break;
         s->direction = DIR_UP;
-        printf("%s", "UP KEY");
         break;
     case SDLK_DOWN:
         if(s->lastUpdateDir == DIR_UP || state.paused) break;
         s->direction = DIR_DOWN;
-        printf("%s", "DOWN KEY");
         break;
 
     case SDLK_LEFT:
         if(s->lastUpdateDir == DIR_RIGHT || state.paused) break;
         s->direction = DIR_LEFT;
-        printf("%s", "KEY LEFT");
         break;
 
     case SDLK_RIGHT:
         if(s->lastUpdateDir == DIR_LEFT || state.paused) break;
         s->direction = DIR_RIGHT;
-        printf("%s", "RIGHT KEY");
         break;
     
     case SDLK_ESCAPE:
