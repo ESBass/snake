@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,6 +30,7 @@ struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
     int paused, nopause;
+    int score;
 } typedef gamestate;
 
 //Basic vector 2 struct.
@@ -91,11 +93,14 @@ void RenderSnake(snake s, Vector2 tail[]);
 
 int main(int argc, char** argv){
 
+    //Starting variables for the snake
     int snakeStartLength = 3;
     int snakeInterval = 250;
-
     state.nopause = 0;
 
+    state.score = 0;
+
+    //Parameter processings
     for (int arg = 1; arg < argc; arg++)
     {
         char* param = argv[arg];
@@ -122,10 +127,10 @@ int main(int argc, char** argv){
     //Used to check the window state.
     int shouldClose = 0;
 
+
     //Create player snake.
     snake player;
     Vector2 apple = {0};
-
     srand(time(NULL));
 
     player.length = snakeStartLength;
@@ -135,11 +140,30 @@ int main(int argc, char** argv){
 
     //Init sdl.
     if(!SDL_Init(SDL_INIT_VIDEO)){
+        printf("%s\n", "SDL Video Subsystem failed to initialise:");
+        printf("%s\n", SDL_GetError());
         return -1;
     }
 
+    if(!TTF_Init()){
+        printf("%s\n", "SDL TTF Subsystem failed to initialise:");
+        printf("%s\n", SDL_GetError());
+        return -1;
+    }
+
+    TTF_Font *font;
+
+    font = TTF_OpenFont("../res/OpenSans-SemiBold.ttf", 24);
+
+    if(!font){
+        printf("%s\n", "Font error");
+        printf("%s\n", SDL_GetError());
+        return -1;
+    }
+
+
     //Create renderer and window.
-    state.window = SDL_CreateWindow("WINDOW", WIDTH, HEIGHT, 0);
+    state.window = SDL_CreateWindow("Snake - Liz Bass", WIDTH, HEIGHT, 0);
     state.renderer = SDL_CreateRenderer(state.window, NULL);
 
     //If one of wasn't created, return out.
@@ -158,6 +182,24 @@ int main(int argc, char** argv){
 
     MoveApple(&apple, snakeTail, &player);
 
+    SDL_Color white = {255, 255, 255, 255};
+    char string[100], outbuff[125];
+
+    sprintf(string, "%d", state.score);
+
+    strcat(outbuff, "Score: ");
+    strcat(outbuff, string);
+
+    SDL_Surface* scoreboard = TTF_RenderText_Solid(font, outbuff, 0, white);
+
+    if(scoreboard == NULL){
+        printf("%s\n", "Could not render text");
+        printf("%s\n", SDL_GetError());
+        return -1;
+    }    
+
+    SDL_Texture* text_texture;
+    SDL_FRect dest = {565, 10, scoreboard->w, scoreboard->h};
     state.paused = 0;
 
     while (!shouldClose) {
@@ -183,7 +225,18 @@ int main(int argc, char** argv){
 
             if(playerapplepos.x == apple.x && playerapplepos.y == apple.y){
                 player.length++;
+                state.score++;
                 MoveApple(&apple, snakeTail, &player);
+
+                memset(string, 0, strlen(string));
+                memset(outbuff, 0, strlen(outbuff));
+
+                sprintf(string, "%d", state.score);
+
+                strcat(outbuff, "Score: ");
+                strcat(outbuff, string);
+
+                scoreboard = TTF_RenderText_Solid(font, outbuff, 0, white);
             }
 
             lastupdate = SDL_GetTicks();
@@ -197,11 +250,20 @@ render:
         SDL_SetRenderDrawColor(state.renderer, 0, 255, 0, 255);
         SDL_RenderFillRect(state.renderer, &(SDL_FRect){apple.x, apple.y, 45, 45});
 
+        text_texture = SDL_CreateTextureFromSurface(state.renderer, scoreboard);
+
+        SDL_RenderTexture(state.renderer, text_texture, &(SDL_FRect){0, 0, scoreboard->w, scoreboard->h}, &dest);
         SDL_RenderPresent(state.renderer);
+
+        
     }
 
+    SDL_DestroyTexture(text_texture);
+    SDL_DestroySurface(scoreboard);
     SDL_DestroyRenderer(state.renderer);
     SDL_DestroyWindow(state.window);
+    TTF_Quit();
+    SDL_Quit();
     return 0;
 }
 

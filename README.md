@@ -14,4 +14,5 @@ This is just a test snake game.
 
 `-nopause`: Disables pausing.
 
-** This has SDL_ttf as a dependency which can cause issues on Windows **
+__This has SDL_ttf as a dependency which can cause issues on Windows__
+Attempt to compile on Windows at your own risk!
