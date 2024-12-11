@@ -13,3 +13,5 @@ This is just a test snake game.
 - `--suicide`
 
 `-nopause`: Disables pausing.
+
+** This has SDL_ttf as a dependency which can cause issues on Windows **
