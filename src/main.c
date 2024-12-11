@@ -121,6 +121,14 @@ int main(int argc, char** argv){
         }
 
         if(!strcmp(param, "-nopause")) state.nopause = 1;
+
+        if(!strcmp(param, "-snakescore")){
+            state.score = atoi(argv[arg+1]);
+        }
+
+        if(!strcmp(param, "-closeondie")){
+            continue;
+        }
     }
     
 

@@ -14,6 +14,10 @@ This is just a test snake game.
 
 `-nopause`: Disables pausing.
 
+`-snakescore x`: The starting score of the snake.
+
+`-closeondie`: Closes the program on death instead of game over (Not yet implemented).
+
 ## Requirements
 
 In order to run this, you will need to create a directory called `res` and inside place a ttf file called `Score_font.ttf`. This is basically to avoid dealing with font licensing issues.
