@@ -1,5 +1,5 @@
 [submodule "lib/sdl"]
-	path = lib/sdl
+	path = lib/SDL
 	url = https://github.com/libsdl-org/SDL.git
 [submodule "lib/SDL_ttf"]
 	path = lib/SDL_ttf
