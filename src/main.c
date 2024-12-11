@@ -153,7 +153,7 @@ int main(int argc, char** argv){
 
     TTF_Font *font;
 
-    font = TTF_OpenFont("../res/OpenSans-SemiBold.ttf", 24);
+    font = TTF_OpenFont("../res/Score_font.ttf", 24);
 
     if(!font){
         printf("%s\n", "Font error");
