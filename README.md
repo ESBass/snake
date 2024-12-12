@@ -16,7 +16,7 @@ This is just a test snake game.
 
 `-snakescore x`: The starting score of the snake.
 
-`-closeondie`: Closes the program on death instead of game over (Not yet implemented).
+`-closeondie`: Closes the program on death instead of game over.
 
 ## Requirements
 
@@ -24,4 +24,4 @@ In order to run this, you will need to create a directory called `res` and insid
 
 __This has SDL_ttf as a dependency which can cause issues on Windows__
 
-Attempt to compile on Windows at your own risk!
+Attempt to compile on Windows at your own risk.

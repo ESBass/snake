@@ -29,7 +29,7 @@
 struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
-    int paused, nopause;
+    int paused, nopause, closeondie;
     int score;
 } typedef gamestate;
 
@@ -64,8 +64,35 @@ void MoveApple(Vector2* applepos, Vector2 tail[], snake* s);
 void HandleSnakeInput(snake* s, SDL_Event* event);
 
 void GameOver(){
+
+    if(state.closeondie) exit(0);
     printf("\n%s\n", "Game Over!");
-    exit(0);
+    int rectwidth = 1100;
+    int rectheight = 650;
+
+    TTF_Font* gameover = TTF_OpenFont("../res/Score_font.ttf", 200);
+    SDL_Surface* gameOverScreen = TTF_RenderText_Solid_Wrapped(gameover, "Game\nOver!", 0, (SDL_Color){255, 255, 255, 255}, 0);
+
+    SDL_Texture* words;
+    SDL_FRect dest = {((rectwidth/2) - ((gameOverScreen->w / 2)) + 100), ((rectheight/2) - (gameOverScreen->h / 2)), gameOverScreen->w, gameOverScreen->h};
+
+    words = SDL_CreateTextureFromSurface(state.renderer, gameOverScreen);
+
+    SDL_SetRenderDrawColor(state.renderer, 200, 0, 0, 255);
+
+    while(1){
+        SDL_Event ev;
+        while (SDL_PollEvent(&ev)) {
+        switch (ev.type) {
+            case SDL_EVENT_QUIT:
+                exit(0);
+            }   
+        }
+
+        SDL_RenderFillRect(state.renderer, &(SDL_FRect){((WIDTH/2) - (rectwidth/2)), ((HEIGHT/2) - (rectheight/2)), rectwidth, rectheight});
+        SDL_RenderTexture(state.renderer, words, &(SDL_FRect){0, 0, gameOverScreen->w, gameOverScreen->h}, &dest);
+        SDL_RenderPresent(state.renderer);
+    }   
 }
 
 //Basically a queue management function.
@@ -97,6 +124,7 @@ int main(int argc, char** argv){
     int snakeStartLength = 3;
     int snakeInterval = 250;
     state.nopause = 0;
+    state.closeondie = 0;
 
     state.score = 0;
 
@@ -127,7 +155,7 @@ int main(int argc, char** argv){
         }
 
         if(!strcmp(param, "-closeondie")){
-            continue;
+            state.closeondie = 1;
         }
     }
     
@@ -161,7 +189,7 @@ int main(int argc, char** argv){
 
     TTF_Font *font;
 
-    font = TTF_OpenFont("../res/Score_font.ttf", 24);
+    font = TTF_OpenFont("../res/Score_font.ttf", 30);
 
     if(!font){
         printf("%s\n", "Font error");
@@ -260,13 +288,13 @@ render:
         SDL_SetRenderDrawColor(state.renderer, 0, 255, 0, 255);
         SDL_RenderFillRect(state.renderer, &(SDL_FRect){apple.x, apple.y, 45, 45});
 
-
         SDL_RenderTexture(state.renderer, text_texture, &(SDL_FRect){0, 0, scoreboard->w, scoreboard->h}, &dest);
         SDL_RenderPresent(state.renderer);
 
         
     }
 
+quit:
     SDL_DestroyTexture(text_texture);
     SDL_DestroySurface(scoreboard);
     SDL_DestroyRenderer(state.renderer);
